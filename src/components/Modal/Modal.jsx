@@ -1,41 +1,33 @@
 import PropTypes from 'prop-types';
-import { Component } from "react";
+import { useEffect } from "react";
 import { ModalOverlay, ModalField } from "./Modal.styled";
 import { createPortal } from "react-dom";
 
 const modalRoot = document.querySelector('#modal-root')
 
-class Modal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.handleKeyDown);
-  };
+const Modal = ({onClose, children}) => {
+  useEffect(() => {
+    window.addEventListener('keydown', handleOnClose);
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleKeyDown)
-  }
+    return () => {
+      window.removeEventListener('keydown', handleOnClose);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  handleKeyDown = e => {
-    if (e.code === "Escape") {
-      this.props.onClose();
+  const handleOnClose = e => {
+    if (e.code === "Escape" || e.currentTarget === e.target) {
+      onClose();
     };
   };
-  
-  handleBackdropClick = e => {
-    if (e.currentTarget === e.target) {
-      this.props.onClose();
-    }
-  };
 
-  render() {
-    const { children } = this.props;
-    return createPortal(
-      <ModalOverlay onClose={this.handleBackdropClick}>
-        <ModalField>
-          {children}
-        </ModalField>
-      </ModalOverlay>, modalRoot
-    );
-  };
+  return createPortal(
+    <ModalOverlay onClose={handleOnClose}>
+      <ModalField>
+        {children}
+      </ModalField>
+    </ModalOverlay>, modalRoot
+  );
 };
 
 Modal.propTypes = {

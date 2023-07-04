@@ -1,79 +1,79 @@
-import React, { Component } from "react";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { getPhotos } from "services/gallery-api";
-import { Audio } from 'react-loader-spinner'
+import { useEffect, useState } from "react";
 import { AppField } from "./App.styled";
 import Searchbar from "components/Searchbar";
 import ImageGallery from "components/ImageGallery";
 import Button from "components/Button";
+import Loader from "components/Loader";
 
-export class App extends Component {
-  state = {
-    photos: [],
-    isLoading: false,
-    error: null,
-    page: 1,
-    value: "",
-    total: 0
-  };
+export const App = () => {
+  const [photos, setPhotos] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState("");
+  const [total, setTotal] = useState(0);
 
-  async componentDidUpdate(_, prevState) {
-    const { value, page } = this.state;
-    
-    if (prevState.value !== value || prevState.page !== page) {
-      try {
-        this.setState({ isLoading: true });
-        const response = await getPhotos(value, page);
-
-        if (response.hits.length === 0) {
-          return alert(`Sorry, the photos of you requested: ${value} did not found.`)
-        }
-        
-        this.setState(({ photos }) => ({
-            photos: [...photos, ...response.hits],
-            total: response.totalHits
-          }));
-
-      } catch (error) {
-        this.setState({ error });
-        
-      } finally {
-        this.setState({ isLoading: false });
-      };
+  useEffect(() => {
+    if (!query) {
+      return
     };
-  };
-
-  onSubmit = ({ value }) => {
-    if (value.trim() === "") {
-      return alert('The string without value')
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await getPhotos(query, page);
+        if (response.hits.length === 0) {
+          return toast.error(`Sorry, but nothing was found for your query: ${query}.`);
+        }
+        setPhotos(prevPhotos => [...prevPhotos, ...response.hits])
+        setTotal(response.totalHits)
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      };
     }
-    this.setState({
-      value,
-      photos: [],
-      page: 1
-    })
+    fetchData();
+  }, [query, page]);
+
+  const onSubmit = ({ query }) => {
+    if (query.trim() === "") {
+      return toast.error(`Enter the query to search for`);
+    }
+    setQuery(query);
+    setPhotos([]);
+    setPage(1);
+    setError(null);
+  }
+
+  const onLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  onLoadMore = () => {
-    this.setState(({ page }) => ({ page: page + 1 }))
-  };
+  const allPages = total / photos.length;
+  const shouldRenderLoadMoreButton = allPages > 1 && !isLoading && photos.length !== 0;
 
-  render() {
-    const { photos, isLoading, error, total } = this.state;
-    const allPages = total / photos.length;
-    return (
-      <AppField>
-        <Searchbar onSubmit={this.onSubmit} />
-        {isLoading && <Audio
-                        height="160"
-                        width="160"
-                        radius="9"
-                        color="blue"
-                        ariaLabel="loading"
-                      />}
-        {error && <h2>Can not download pgotos</h2>}
-        {photos.length > 1 && <ImageGallery items={photos} />}
-        {allPages > 1 && !isLoading && photos.length !== 0 && <Button onClick={this.onLoadMore}/>}
-      </AppField>
-    );
-  };
+  return (
+    <AppField>
+      <Searchbar onSubmit={onSubmit} />
+      {isLoading && <Loader />}
+      {error && <h2>Something went wrong... We can't upload the photo</h2>}
+      {photos.length > 1 && <ImageGallery items={photos} />}
+      {shouldRenderLoadMoreButton && <Button onClick={onLoadMore} isLoading={isLoading} />}
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </AppField>
+  );
 };
