@@ -63,7 +63,7 @@ export const App = () => {
       {photos.length > 1 && <ImageGallery items={photos} />}
       {shouldRenderLoadMoreButton && <Button onClick={onLoadMore} isLoading={isLoading} />}
       <ToastContainer
-        position="top-center"
+        position="top-right"
         autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}
