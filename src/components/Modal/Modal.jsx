@@ -7,22 +7,28 @@ const modalRoot = document.querySelector('#modal-root')
 
 const Modal = ({onClose, children}) => {
   useEffect(() => {
+    const handleOnClose = e => {
+      if (e.code === "Escape") {
+        onClose();
+      };
+    };
+
     window.addEventListener('keydown', handleOnClose);
 
     return () => {
       window.removeEventListener('keydown', handleOnClose);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    
+  }, [onClose]);
 
-  const handleOnClose = e => {
-    if (e.code === "Escape" || e.currentTarget === e.target) {
+  const handleBackdropClick = e => {
+    if (e.currentTarget === e.target) {
       onClose();
-    };
+    }
   };
 
   return createPortal(
-    <ModalOverlay onClose={handleOnClose}>
+    <ModalOverlay onClick={(e) => handleBackdropClick(e)}>
       <ModalField>
         {children}
       </ModalField>

@@ -6,13 +6,21 @@ import Modal from "components/Modal";
 const ImageGalleryItem = ({ smallImageURL, largeImageURL, alt }) => {
   const [showModal, setShowModal] = useState(false);
 
-  const toggleModal = () => {
-    setShowModal(!showModal);
+  const closeModal = () => {
+    if (showModal) {
+      setShowModal(false);
+    };
   };
 
-  return (<GalleryItem onClick={toggleModal} >
+  const openModal = () => {
+    if (!showModal) {
+      setShowModal(true)
+    };
+  };
+
+  return (<GalleryItem onClick={openModal} >
     <GalleryImage src={smallImageURL} alt={alt} />
-    {showModal && <Modal onClose={toggleModal}><img src={largeImageURL} alt={alt} /></Modal>}
+    {showModal && <Modal onClose={closeModal}><img src={largeImageURL} alt={alt} /></Modal>}
   </GalleryItem>)
 };
 
